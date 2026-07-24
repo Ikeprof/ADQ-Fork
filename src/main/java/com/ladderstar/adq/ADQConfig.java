@@ -28,6 +28,7 @@ public class ADQConfig {
     public static final ModConfigSpec.IntValue QUEST_EXPIRATION_TIME;
     public static final ModConfigSpec.IntValue PLAYER_RADIUS_SCALING;
     public static final ModConfigSpec.IntValue MIN_PLAYER_RADIUS;
+    public static final ModConfigSpec.IntValue BOARD_VISIBILITY_RADIUS;
     public static final ModConfigSpec.DoubleValue REWARD_REDUCTION_SCALE;
     public static final ModConfigSpec.BooleanValue ENABLE_CARGO_INVULNERABILITY;
     public static final ModConfigSpec.IntValue MIN_START_DISTANCE;
@@ -50,7 +51,7 @@ public class ADQConfig {
 
         MAX_ACTIVE_QUESTS = BUILDER
                 .comment("Maximum number of concurrent available quests on the board.")
-                .defineInRange("maxActiveQuestsPerBoard", 8, 0, 18);
+                .defineInRange("maxActiveQuestsPerBoard", 8, 0, 98);
 
         MIN_DISTANCE = BUILDER
                 .comment("Minimum distance (in blocks) between quest start and delivery location.")
@@ -78,7 +79,9 @@ public class ADQConfig {
         PLAYER_RADIUS_SCALING = BUILDER
                 .comment("Scaling amount of blocks added to the distance between the two furthest players to determine quest generation radius.")
                 .defineInRange("playerRadiusScaling", 1000, 100, 10000);
-
+        BOARD_VISIBILITY_RADIUS = BUILDER
+                .comment("Maximum distance in blocks a quest's pickup location can be from a player for it to appear on their board.")
+                .defineInRange("boardVisibilityRadius", 500, 50, 20000);
         MIN_PLAYER_RADIUS = BUILDER
                 .comment("Default search radius in blocks for quest generation if only one player is online.")
                 .defineInRange("minPlayerRadius", 1000, 100, 10000);

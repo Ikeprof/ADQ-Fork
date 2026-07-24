@@ -334,8 +334,23 @@ public class QuestGenerator {
 
         if (useCustom && !templatesSource.isEmpty()) {
             net.minecraft.util.RandomSource rand = net.minecraft.util.RandomSource.create();
-            selectedTemplate = templatesSource.get(rand.nextInt(templatesSource.size()));
-            if (selectedTemplate != null) {
+            java.util.List<CustomQuestTemplate> eligibleTemplates = new java.util.ArrayList<>();
+            for (CustomQuestTemplate template : templatesSource) {
+                boolean alreadyActive = false;
+                synchronized (availableQuests) {
+                    for (QuestModel existing : availableQuests) {
+                        if (existing.getAcceptedBy() == null && existing.getName().equals(template.name)) {
+                            alreadyActive = true;
+                            break;
+                        }
+                    }
+                }
+                if (!alreadyActive) {
+                    eligibleTemplates.add(template);
+                }
+            }
+            if (!eligibleTemplates.isEmpty()) {
+                selectedTemplate = eligibleTemplates.get(rand.nextInt(eligibleTemplates.size()));
                 customStart = parseCoordinates(selectedTemplate.pickupPos);
                 customEnd = parseCoordinates(selectedTemplate.dropoffPos);
             }
@@ -396,7 +411,26 @@ public class QuestGenerator {
             });
             return;
         }
-
+        if (useCustom && !templatesSource.isEmpty()) {
+            boolean anyEligible = false;
+            for (CustomQuestTemplate t : templatesSource) {
+                boolean hasCoords = parseCoordinates(t.pickupPos) != null && parseCoordinates(t.dropoffPos) != null;
+                boolean alreadyActive;
+                synchronized (availableQuests) {
+                    alreadyActive = availableQuests.stream()
+                            .anyMatch(q -> q.getAcceptedBy() == null && q.getName().equals(t.name));
+                }
+                if (!hasCoords || !alreadyActive) {
+                    anyEligible = true;
+                    break;
+                }
+            }
+            if (!anyEligible) {
+                LOGGER.info("[TNM Quests] All custom templates already have an unclaimed quest active. Skipping generation this cycle.");
+                isGenerating.set(false);
+                return;
+            }
+        }
         final CustomQuestTemplate finalSelectedTemplate = selectedTemplate;
  
         java.util.concurrent.CompletableFuture.runAsync(() -> {

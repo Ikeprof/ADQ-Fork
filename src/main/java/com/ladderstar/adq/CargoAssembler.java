@@ -270,6 +270,36 @@ public class CargoAssembler {
                 if (container != null) {
                     dev.ryanhcode.sable.sublevel.SubLevel sub = container.getSubLevel(subLevelId);
                     if (sub != null) {
+                        dev.simulated_team.simulated.content.blocks.rope.strand.server.ServerLevelRopeManager ropeManager =
+                                dev.simulated_team.simulated.content.blocks.rope.strand.server.ServerLevelRopeManager.getOrCreate(sl);
+                        java.util.List<dev.simulated_team.simulated.content.blocks.rope.strand.server.ServerRopeStrand> strandsToDetach = new java.util.ArrayList<>();
+                        for (dev.simulated_team.simulated.content.blocks.rope.strand.server.ServerRopeStrand strand : ropeManager.getAllStrands()) {
+                            for (dev.simulated_team.simulated.content.blocks.rope.strand.server.RopeAttachment attachment : strand.getAttachments()) {
+                                if (subLevelId.equals(attachment.subLevelID())) {
+                                    strandsToDetach.add(strand);
+                                    break;
+                                }
+                            }
+                        }
+                        for (dev.simulated_team.simulated.content.blocks.rope.strand.server.ServerRopeStrand strand : strandsToDetach) {
+                            for (dev.simulated_team.simulated.content.blocks.rope.strand.server.RopeAttachment attachment : strand.getAttachments()) {
+                                try {
+                                    net.minecraft.world.level.block.entity.BlockEntity be = sl.getBlockEntity(attachment.blockAttachment());
+                                    if (be instanceof com.simibubi.create.foundation.blockEntity.SmartBlockEntity smartBe) {
+                                        dev.simulated_team.simulated.content.blocks.rope.RopeStrandHolderBehavior holder =
+                                                smartBe.getBehaviour(dev.simulated_team.simulated.content.blocks.rope.RopeStrandHolderBehavior.TYPE);
+                                        if (holder != null) {
+                                            holder.detachRope();
+                                            smartBe.notifyUpdate();
+                                        }
+                                    }
+                                } catch (Throwable t) {
+                                    LOGGER.warn("[TNM Quests] Failed to properly reset rope holder during cargo cleanup", t);
+                                }
+                            }
+                            ropeManager.removeStrand(strand.getUUID());
+                            LOGGER.info("[TNM Quests] Detached rope strand {} still attached to cargo sublevel before removal", strand.getUUID());
+                        }
                         container.removeSubLevel(sub, dev.ryanhcode.sable.sublevel.storage.SubLevelRemovalReason.REMOVED);
                         LOGGER.info("[TNM Quests] Successfully removed Sable physics sublevel from dimension registry: {}", sl.dimension().location());
                         break;

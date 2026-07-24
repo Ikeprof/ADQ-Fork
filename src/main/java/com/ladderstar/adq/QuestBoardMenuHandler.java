@@ -19,11 +19,15 @@ public class QuestBoardMenuHandler {
         if (!(player instanceof ServerPlayer serverPlayer)) return;
 
         List<QuestModel> quests = QuestGenerator.getAvailableQuests();
+        double visRadius = ADQConfig.BOARD_VISIBILITY_RADIUS.get();
+        quests = quests.stream()
+                .filter(q -> player.blockPosition().distSqr(q.getStartingPos()) <= visRadius * visRadius)
+                .toList();
         UUID playerUuid = player.getUUID();
 
         long cooldownTime = QuestGenerator.getCooldown(playerUuid);
         long timeSinceClaim = System.currentTimeMillis() - cooldownTime;
-        long oneHourMs = 3600000L;
+        long oneHourMs = 0L;
         long cooldownRemainingSeconds = 0;
         if (timeSinceClaim < oneHourMs) {
             cooldownRemainingSeconds = (oneHourMs - timeSinceClaim) / 1000L;
@@ -105,7 +109,7 @@ public class QuestBoardMenuHandler {
             UUID playerUuid = player.getUUID();
             long cooldownTime = QuestGenerator.getCooldown(playerUuid);
             long timeSinceClaim = System.currentTimeMillis() - cooldownTime;
-            long oneHourMs = 3600000L;
+            long oneHourMs = 0L;
             long cooldownRemainingSeconds = 0;
             if (timeSinceClaim < oneHourMs) {
                 cooldownRemainingSeconds = (oneHourMs - timeSinceClaim) / 1000L;
@@ -115,9 +119,12 @@ public class QuestBoardMenuHandler {
             long intervalTicks = (long) ADQConfig.QUEST_INTERVAL.get() * 60L * 20L;
             long ticksUntilNext = intervalTicks - (gameTime % intervalTicks);
             long nextQuestTimerSeconds = ticksUntilNext / 20L;
-
+            double visRadius = ADQConfig.BOARD_VISIBILITY_RADIUS.get();
+            List<QuestModel> visibleQuests = quests.stream()
+                    .filter(q -> player.blockPosition().distSqr(q.getStartingPos()) <= visRadius * visRadius)
+                    .toList();
             player.connection.send(new net.minecraft.network.protocol.common.ClientboundCustomPayloadPacket(
-                new ClientboundQuestSyncPacket(quests, cooldownRemainingSeconds, nextQuestTimerSeconds, false, QuestGenerator.isGenerating())
+                new ClientboundQuestSyncPacket(visibleQuests, cooldownRemainingSeconds, nextQuestTimerSeconds, false, QuestGenerator.isGenerating())
             ));
         }
     }
@@ -141,7 +148,7 @@ public class QuestBoardMenuHandler {
         UUID playerUuid = player.getUUID();
         long cooldownTime = QuestGenerator.getCooldown(playerUuid);
         long timeSinceClaim = System.currentTimeMillis() - cooldownTime;
-        long oneHourMs = 3600000L;
+        long oneHourMs = 0L;
         if (timeSinceClaim < oneHourMs && !player.hasPermissions(2)) {
             long remainingSeconds = (oneHourMs - timeSinceClaim) / 1000L;
             player.sendSystemMessage(Component.literal("§cYou cannot accept a new contract yet! Cooldown remaining: §e" 

@@ -190,8 +190,8 @@ public class QuestBoardScreen extends AbstractSimiScreen {
             }
 
             // Quests Accept buttons (Glowing Green Play Buttons)
-            int startIdx = currentPage * 2;
-            for (int i = 0; i < 2; i++) {
+            int startIdx = currentPage * 3;
+            for (int i = 0; i < 3; i++) {
                 int questIdx = startIdx + i;
                 if (questIdx < totalQuests) {
                     QuestModel quest = quests.get(questIdx);
@@ -351,45 +351,50 @@ public class QuestBoardScreen extends AbstractSimiScreen {
                 drawCenteredNoShadow(graphics, "Next contract in: " + mins + "m " + secs + "s", leftPos + 122, topPos + 40, inkColor);
             }
 
-            int startIdx = currentPage * 2;
+            int startIdx = currentPage * 3;
             int textX = leftPos + 42;
             int wrapWidth = 130; // Bound text horizontally to prevent Accept button overlap
 
-            for (int i = 0; i < 2; i++) {
-                int questIdx = startIdx + i;
-                if (questIdx < totalQuests) {
-                    QuestModel quest = quests.get(questIdx);
-                    int textY = topPos + 52 + (i * 68);
+            for (int i = 0; i < 3; i++) {
+                try {
+                    int questIdx = startIdx + i;
+                    if (questIdx < totalQuests) {
+                        QuestModel quest = quests.get(questIdx);
+                        int textY = topPos + 52 + (i * 68);
 
-                    // Draw dividing line between quests
-                    if (i > 0) {
-                        graphics.fill(leftPos + 22, textY - 6, leftPos + 222, textY - 5, 0xFFC0B8A8);
-                    }
-
-                    // Quest Title (wrapped to prevent spill)
-                    textY = drawWrappedText(graphics, "§1" + quest.getName(), textX, textY, wrapWidth, inkColor);
-
-                    // Mass info on its own line
-                    textY = drawWrappedText(graphics, "§9Mass: §0" + (int) quest.getActualWeight() + " kpg", textX, textY, wrapWidth, inkColor);
-
-                    // Route info on its own line
-                    textY = drawWrappedText(graphics, "§9Route: §0" + (int) quest.getDistance() + " blocks", textX, textY, wrapWidth, inkColor);
-
-                    // Payout details (all rewards)
-                    if (!quest.getRewards().isEmpty()) {
-                        List<String> rewardStrings = new java.util.ArrayList<>();
-                        for (String rawReward : quest.getRewards()) {
-                            String[] parts = rawReward.split(":");
-                            if (parts.length >= 2) {
-                                String rName = parts[1].replace("_", " ");
-                                rName = Character.toUpperCase(rName.charAt(0)) + rName.substring(1);
-                                String count = parts.length > 2 ? parts[2] : "1";
-                                rewardStrings.add(rName + " x" + count);
-                            }
+                        // Draw dividing line between quests
+                        if (i > 0) {
+                            graphics.fill(leftPos + 22, textY - 6, leftPos + 222, textY - 5, 0xFFC0B8A8);
                         }
-                        String rewardsJoined = "§2Pay: §0" + String.join(", ", rewardStrings);
-                        drawWrappedText(graphics, rewardsJoined, textX, textY, wrapWidth, inkColor);
+
+                        // Quest Title (wrapped to prevent spill)
+                        textY = drawWrappedText(graphics, "§1" + quest.getName(), textX, textY, wrapWidth, inkColor);
+
+                        // Mass info on its own line
+                        textY = drawWrappedText(graphics, "§9Mass: §0" + (int) quest.getActualWeight() + " kpg", textX, textY, wrapWidth, inkColor);
+
+                        // Route info on its own line
+                        textY = drawWrappedText(graphics, "§9Route: §0" + (int) quest.getDistance() + " blocks", textX, textY, wrapWidth, inkColor);
+
+                        // Payout details (all rewards)
+                        if (!quest.getRewards().isEmpty()) {
+                            List<String> rewardStrings = new java.util.ArrayList<>();
+                            for (String rawReward : quest.getRewards()) {
+                                String[] parts = rawReward.split(":");
+                                if (parts.length >= 2) {
+                                    String rName = parts[1].replace("_", " ");
+                                    rName = Character.toUpperCase(rName.charAt(0)) + rName.substring(1);
+                                    String count = parts.length > 2 ? parts[2] : "1";
+                                    rewardStrings.add(rName + " x" + count);
+                                }
+                            }
+                            String rewardsJoined = "§2Pay: §0" + String.join(", ", rewardStrings);
+                            drawWrappedText(graphics, rewardsJoined, textX, textY, wrapWidth, inkColor);
+                        }
                     }
+                } catch (Throwable t) {
+                    System.out.println("[TNM Quests] EXCEPTION at i=" + i + ":");
+                    t.printStackTrace();
                 }
             }
 
